@@ -3,10 +3,6 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# ใช้ registry เร็ว เพื่อไม่ timeout
-RUN yarn config set registry https://registry.npmmirror.com
-RUN yarn config set network-timeout 600000
-
 COPY package.json yarn.lock ./
 RUN yarn install --frozen-lockfile
 
