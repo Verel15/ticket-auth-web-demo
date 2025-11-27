@@ -1,7 +1,11 @@
-# ---------- 1. Builder ----------
-FROM node:18 AS builder
+# ---------- 1) Builder ----------
+FROM node:18-alpine AS builder
 
 WORKDIR /app
+
+# ใช้ registry เร็ว เพื่อไม่ timeout
+RUN yarn config set registry https://registry.npmmirror.com
+RUN yarn config set network-timeout 600000
 
 COPY package.json yarn.lock ./
 RUN yarn install --frozen-lockfile
@@ -9,17 +13,18 @@ RUN yarn install --frozen-lockfile
 COPY . .
 RUN yarn build
 
-# ---------- 2. Runner ----------
+# ---------- 2) Runner ----------
 FROM node:18-alpine AS runner
 
 WORKDIR /app
+ENV NODE_ENV=production
 
-# copy standalone output
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 
-ENV NODE_ENV=production
-EXPOSE 3000
+RUN adduser -D nextuser
+USER nextuser
 
+EXPOSE 3000
 CMD ["node", "server.js"]

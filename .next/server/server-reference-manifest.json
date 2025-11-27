@@ -1,0 +1,28 @@
+{
+  "node": {
+    "00acc5e00eb7784bb999c3774378a2805c7141a0bb": {
+      "workers": {
+        "app/_not-found/page": {
+          "moduleId": 91535,
+          "async": false,
+          "exportedName": "default",
+          "filename": "src/app/env.ts"
+        },
+        "app/page": {
+          "moduleId": 69582,
+          "async": false,
+          "exportedName": "default",
+          "filename": "src/app/env.ts"
+        }
+      },
+      "layer": {
+        "app/_not-found/page": "action-browser",
+        "app/page": "action-browser"
+      },
+      "filename": "src/app/env.ts",
+      "exportedName": "default"
+    }
+  },
+  "edge": {},
+  "encryptionKey": "REflMRHrsPQAQQfs99+l/b9v0I5Jbkv5uEOV2KY79TQ="
+}
