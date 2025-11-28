@@ -15,7 +15,7 @@ FROM node:20-alpine AS runner
 WORKDIR /app
 
 COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
+# COPY --from=builder /app/public ./public
 
 ENV NODE_ENV=production
 EXPOSE 3000
