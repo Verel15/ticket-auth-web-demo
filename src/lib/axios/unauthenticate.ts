@@ -8,7 +8,7 @@ async function loadEnvOnce() {
     // ... (ใช้โค้ด loadEnvOnce() เดิมที่กล่าวไว้ข้างต้น) ...
     // ... (เพื่อความกระชับ ขอละส่วนการตรวจสอบ cache/promise ไว้ที่นี่) ...
     if (!envPromise) {
-        envPromise = getENV().then(env => { /* ... cache logic ... */ return env; });
+        envPromise = getENV().then(env => env).catch(err => { envPromise = null; throw err; });
     }
     return envPromise;
 }
@@ -19,16 +19,26 @@ export default async function getUnauthenInstance() {
         return cachedUnauthenInstance;
     }
 
-    // 2. โหลด ENV (ซึ่งตอนนี้ถูก Memoize ไว้แล้ว)
-    const env = await loadEnvOnce();
+    // 2. เลือกค่าจาก NEXT_PUBLIC_* ถ้ามี (browser) เพื่อหลีกเลี่ยงการเรียก getENV() ที่เป็น server-only
+    const clientUserAPI = typeof window !== 'undefined' ? process.env.NEXT_PUBLIC_USER_API : undefined;
+
+    let userAPI: string | undefined;
+    if (clientUserAPI) {
+        userAPI = clientUserAPI;
+    } else {
+        // โหลด server env เฉพาะเมื่อไม่มี NEXT_PUBLIC_USER_API
+        const env = await loadEnvOnce();
+        userAPI = env.userAPI;
+    }
 
     // 3. สร้าง Axios Instance
     const unauthen = axios.create()
 
     // 4. กำหนด Interceptor/baseURL
     unauthen.interceptors.request.use(async (config) => {
-        // กำหนด baseURL ที่โหลดมา
-        config.baseURL = env.userAPI; 
+        // prefer NEXT_PUBLIC_USER_API on the browser
+        config.baseURL = userAPI;
+        if (typeof window !== 'undefined') console.debug('axios unauth baseURL ->', config.baseURL);
         return config
     }, (error) => {
         return Promise.reject(error)

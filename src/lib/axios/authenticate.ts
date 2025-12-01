@@ -41,13 +41,31 @@ export default async function authenticated() {
         return cachedApiInstance;
     }
 
-    const env = await loadEnvOnce(); 
-    const { userAPI, credentialAPI } = env;
+    // Prefer client-side NEXT_PUBLIC_* variables when present so we don't have to
+    // call server-only getENV() from the browser. Otherwise load server env.
+    const clientUserAPI = typeof window !== 'undefined' ? process.env.NEXT_PUBLIC_USER_API : undefined;
+    const clientCredentialAPI = typeof window !== 'undefined' ? process.env.NEXT_PUBLIC_CREDENTIAL_API : undefined;
+
+    let userAPI: string | undefined;
+    let credentialAPI: string | undefined;
+
+    if (clientUserAPI || clientCredentialAPI) {
+        userAPI = clientUserAPI;
+        credentialAPI = clientCredentialAPI;
+    } else {
+        const env = await loadEnvOnce();
+        userAPI = env.userAPI;
+        credentialAPI = env.credentialAPI;
+    }
+
+    const baseURL = userAPI;
 
     const api = axios.create()
 
     api.interceptors.request.use(async (config) => {
-        config.baseURL = userAPI; 
+        config.baseURL = baseURL; 
+        // helpful debug when things go wrong — remove once confirmed working
+        if (typeof window !== 'undefined') console.debug('axios auth baseURL ->', config.baseURL);
         
         const token = Cookies.get(TOKEN_COOKIE_KEY);
         if (token) {
